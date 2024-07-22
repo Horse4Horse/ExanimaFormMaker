@@ -1,0 +1,2 @@
+#define EXANIMAFORMMAKER_API __declspec(dllexport)
+#define EXANIMAFORMMAKER_API __declspec(dllimport)
