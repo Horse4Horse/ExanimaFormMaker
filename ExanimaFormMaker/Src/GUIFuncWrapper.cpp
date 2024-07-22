@@ -4,8 +4,6 @@
 
 struct TGUIFormStructure* createGUITemplate(uint64_t* FormData, const char Caption[], uint64_t AllocNew = 1, uint64_t* ParentForm = 0) {
 
-	UNREFERENCED_PARAMETER(Caption);
-
 	TGUIFormStructure* NewForm = (TGUIFormStructure*)createGUITemplateInternal(FormData, AllocNew, ParentForm);
 	if (!NewForm){
 		std::cout << "Can't create template form! Caption: " << Caption << std::endl;
