@@ -79,20 +79,22 @@ int static WINAPI Menu() {
 		return 0;
 	}
 
+	DefineAllSignatureStructs();
+
 	std::cout << "Press 0 to Exit | Press 1 for Scanning" << std::endl;
 	while (1) {
 		Sleep(100);
 		if (GetAsyncKeyState(VK_NUMPAD0))
 			break;
 		if (GetAsyncKeyState(VK_NUMPAD1)) {
-			DefineAllSignatureStructs();
 
 			/* PoC 
 			* Spawn a basic form. 
-			* For now, without "TGSLines", the form will be old-style. 
 			*/
-			uint64_t* MyForm = createGUITemplateInternal(TGUIForm, 1, 0);
-			registerFormInternal(MyForm, 1);
+			TGUIFormStructure* MyForm = createGUITemplate(TGUIForm, "My form!", 1, 0);
+
+			registerFormInternal((uint64_t*)MyForm, 1);
+
 			std::cout << "Form address: " << std::hex << MyForm << std::endl;
 		}
 	}
@@ -115,7 +117,6 @@ BOOL APIENTRY DllMain(HMODULE hModule, int  ul_reason_for_call, LPVOID) {
 	case DLL_THREAD_DETACH:
 		break;
 	case DLL_PROCESS_DETACH:
-		//CreateThread(0, 0, EjectThread, 0, 0, 0);
 		break;
 	}
 	return TRUE;

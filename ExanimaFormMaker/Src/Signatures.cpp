@@ -10,6 +10,8 @@ uint64_t* TGUIForm;
 /* Ingame functions */
 fCreateGUITemplate* createGUITemplateInternal;
 fRegisterForm* registerFormInternal;
+fConcatStringArray* concatStringArrayInternal;
+fGetTGSLines* getTGSLinesInternal;
 
 static uint64_t ReadGameMemory(uint64_t Address, char* Buf, SIZE_T Size) {
 
@@ -38,7 +40,6 @@ struct SignatureStruct* CreateSignatureStruct(const char SignatureString[], uint
 	StructS->OpcodeSize = OpcodeSize;
 	return StructS;
 }
-
 
 static uint64_t  GetAddressFromDisplacementOpcode(uint8_t Type, char opcode[], uint8_t OpcodeSize, uint64_t InstructionPointer) {
 	uint32_t Displacement = 0;
@@ -88,7 +89,7 @@ static uint64_t FindSignature(char* sig, int MemWritable = false) {
 		}
 	}
 	if (Verbose)
-		std::cout << "Signature not found" << std::endl;
+		std::cout << "Signature not found: " << sig << std::endl;
 
 	return 0;
 }
@@ -107,8 +108,11 @@ static uint64_t FindObjectBySignatureStruct(SignatureStruct* Struct) {
 	if (Struct->Type != Function) {
 		char* OpcodeBytes = new char[Struct->OpcodeSize];
 
-		if (!ReadGameMemory(ObjectSignatureAddress, OpcodeBytes, Struct->OpcodeSize))
+		if (!ReadGameMemory(ObjectSignatureAddress, OpcodeBytes, Struct->OpcodeSize)) {
+			delete[] OpcodeBytes;
 			return 0;
+		}
+
 		ObjectAddress = GetAddressFromDisplacementOpcode(Struct->Type, OpcodeBytes, Struct->OpcodeSize, ObjectSignatureAddress);
 		delete[] OpcodeBytes;
 	}
@@ -138,4 +142,17 @@ extern void DefineAllSignatureStructs() {
 	if (!registerFormInternal)
 		std::cerr << "Can't find 'RegisterForm'! " << std::endl;
 	delete[] fRegisterFormSignature;
+
+	SignatureStruct* fConcatStringArraySignature = CreateSignatureStruct("55 48 89 E5 48 8D A4 ? ? ? ? ? 48 89 5D ? 48 89 7D ? 48 89 75 ? 4C 89 65 ? 4C 89 6D ? 4C 89 75 ? 4C 89 7D ? 48 89 4D ? 48 89 55 ? 4C 89 45 ? 66 45 89 CC", Function);
+	concatStringArrayInternal = (fConcatStringArray*)FindObjectBySignatureStruct(fConcatStringArraySignature);
+	if (!concatStringArrayInternal)
+		std::cerr << "Can't find 'ConcatStringArray'! " << std::endl;
+	delete[] fConcatStringArraySignature;
+
+	SignatureStruct* fGetTGSLinesSignature = CreateSignatureStruct("48 8D 64 ? ? 48 83 3D ? ? ? ? 00 75 ? E8 ? ? ? ? 48 8B 05 ? ? ? ? 48 89 05 ? ? ? ? 48 8D 05", Function);
+	getTGSLinesInternal = (fGetTGSLines*)FindObjectBySignatureStruct(fGetTGSLinesSignature);
+	if (!getTGSLinesInternal)
+		std::cerr << "Can't find 'GetTGSLines'! " << std::endl;
+	delete[] fGetTGSLinesSignature;
+
 }

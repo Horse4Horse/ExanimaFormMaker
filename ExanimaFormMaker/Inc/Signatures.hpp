@@ -37,8 +37,14 @@ typedef uint64_t* __stdcall fCreateGUITemplate(uint64_t* FormData, uint64_t Allo
 /// <param name="RegisterAtAssignedTGUITask">= If true then TGUITask set as address Form+0xA0 will be used for registering. Otherwise the main TGUITask will be used.</param>
 typedef void __stdcall fRegisterForm(uint64_t* Form, uint64_t RegisterAtAssignedTGUITask);
 
+/// <param name="Dst">= Address, where pointer to the result string will be set</param>
+/// <param name="Src">= Array of (StringHeader)+Size+String</param>
+/// <param name="Amount">= Amount of elements in the array, zero-based numbering. With amount less than 1 = "0" will be written to the Dst.</param>
+/// <param name="UseOEMCP">= if set - game will call GetOEMCP() instead of relying on GetACP() which was called on game init. Almost(?) all the time is set to 0.</param>
+typedef void __stdcall fConcatStringArray(uint64_t* Dst, uint64_t* Src, uint64_t Amount, uint16_t UseOEMCP);
 
-
+//  Gives pointer to TGSLines. If it does not exists - creates one and gives pointer to it.
+typedef uint64_t* __stdcall fGetTGSLines(void);
 
 /* Ingame forms */
 extern uint64_t* TGUIForm;
@@ -46,6 +52,9 @@ extern uint64_t* TGUIForm;
 /* Ingame functions */
 extern fCreateGUITemplate* createGUITemplateInternal;
 extern fRegisterForm* registerFormInternal;
+extern fConcatStringArray* concatStringArrayInternal;
+extern fGetTGSLines* getTGSLinesInternal;
+
 
 static uint64_t ReadGameMemory(uint64_t Address, char* Buf, SIZE_T Size);
 
