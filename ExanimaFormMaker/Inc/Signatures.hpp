@@ -3,21 +3,18 @@
 *	Game's declared function postpends with "Internal" and starts with lowercase letter.
 */ 
 
-/* SignatureType description for signature structs.
-"DisplacementData" is an opcode like "mov rcx,[1002BAEF0]" when we need to extract address to the data from IP + Offset + OpcodeSize
-"Function" is an pointer to the function's first byte, AoB signatures of this type tends to be very large.
-"DisplacementFunction" is a "call 100029CC0", so a +1 from an opcode.
+/** Type description for signature structs.
+* "DisplacementData" is an opcode like "mov rcx,[1002BAEF0]" when we need to extract address to the data from IP + Offset + OpcodeSize
+* "DisplacementFunction" is a "call 100029CC0", so always a +1 from IP.
+* "Function" is an pointer to the function's first byte(Address of the function code itself), AoB signatures of this type tends to be very large.
 */
 enum SignatureType { DisplacementData, DisplacementFunction, Function };
 
 struct SignatureStruct {
 	uint64_t OffsetFromAOB;                // Actual opcode offset from the signature's first byte. (Signature + Offset = Target instruction)
 	uint8_t  OpcodeSize;                   // Length of the opcode in bytes.
-	volatile uint64_t InsructionPointer;   // Filled when AOB is found and needed for "ResultAddress = InstructionPointer + DisplacementOffset + OpcodeSize;" 
 	uint8_t  Type;                         // Type of the signature. For determining where displacement offset is in the opcode bytes. Refer to the GetAddressFromDisplacementOpcode() for info.
-	size_t AOBLength;                      // Length of the signature string.
-
-	// Set size of 1 to avoid errors while we use unsafe and outdated strcpy. Change it later.
+	/* Struct hack for C++ new()[] */
 	char AOB[1];                           // Signature string.
 };
 
@@ -56,7 +53,7 @@ extern fConcatStringArray* concatStringArrayInternal;
 extern fGetTGSLines* getTGSLinesInternal;
 
 
-static uint64_t ReadGameMemory(uint64_t Address, char* Buf, SIZE_T Size);
+static BOOL ReadGameMemory(uint64_t Address, char* Buf, SIZE_T Size);
 
 static uint64_t FindSignature(char* sig, int MemWritable);
 static uint64_t GetAddressFromDisplacementOpcode(uint8_t Type, char opcode[], uint8_t OpcodeSize, uint64_t InstructionPointer);

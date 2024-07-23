@@ -66,7 +66,7 @@ int static WINAPI Menu() {
 	hGameProcess = GetCurrentProcess();
 
 	if (!hGameProcess) {
-		std::cerr << "Failed to open process." << std::endl;
+		std::cout << "Failed to open process." << std::endl;
 		CreateThread(0, 0, EjectThread, 0, 0, 0);
 		return 1;
 	}
