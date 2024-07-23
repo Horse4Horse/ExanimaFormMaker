@@ -55,7 +55,7 @@ extern fGetTGSLines* getTGSLinesInternal;
 
 static BOOL ReadGameMemory(uint64_t Address, char* Buf, SIZE_T Size);
 
-static uint64_t FindSignature(char* sig, int MemWritable);
+static uint64_t FindSignature(char* sig);
 static uint64_t GetAddressFromDisplacementOpcode(uint8_t Type, char opcode[], uint8_t OpcodeSize, uint64_t InstructionPointer);
 static uint64_t FindObjectBySignatureStruct(SignatureStruct* Struct);
 struct SignatureStruct* CreateSignatureStruct(const char SignatureString[], uint8_t Type, uint64_t OffsetFromAOB, uint8_t  OpcodeSize);

@@ -68,7 +68,7 @@ static uint64_t FindSignature(char* sig) {
 
 		if (VirtualQuery((LPCVOID)i, &mbi, sizeof(mbi))) {
 
-			if (mbi.Protect & protectFlagsExclude || !(mbi.State & MEM_COMMIT) || !mbi.Protect & PAGE_EXECUTE_READ) {
+			if (mbi.Protect & protectFlagsExclude || !(mbi.State & MEM_COMMIT) || !(mbi.Protect & PAGE_EXECUTE_READ)) {
 				if (Verbose)
 					std::cout << "Bad Region! Region Base Address: " << mbi.BaseAddress << " | Region end address: " << std::hex << (uint64_t)((uint64_t)mbi.BaseAddress + mbi.RegionSize) << std::endl;
 				i += mbi.RegionSize;
@@ -83,7 +83,6 @@ static uint64_t FindSignature(char* sig) {
 				std::cout << "Result: " << std::hex << found << std::endl;
 			return found;
 
-			i = (uint64_t)mbi.BaseAddress + mbi.RegionSize;
 		}
 	}
 	std::cout << "Signature not found: " << sig << std::endl;
