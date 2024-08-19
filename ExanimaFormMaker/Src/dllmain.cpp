@@ -11,8 +11,8 @@ uint64_t GameStaticMemoryStartAddress = 0;
 uint64_t GameStaticMemoryEndAddress = 0;
 uint64_t GameStaticMemorySize = 0;
 
-DWORD static __stdcall EjectThread(LPVOID) {
-	CloseHandle(hGameProcess);
+DWORD static __stdcall EjectThread(LPVOID)
+{
 	if (fp)
 		fclose(fp);
 	FreeConsole();
@@ -20,21 +20,24 @@ DWORD static __stdcall EjectThread(LPVOID) {
 	FreeLibraryAndExitThread(myhModule, 0);
 }
 
-static uint64_t GetModuleMemoryRange(uint64_t& ModuleStartAddress, uint64_t& ModuleEndAddress, uint64_t& ModuleSize) {
+static uint64_t GetModuleMemoryRange(uint64_t& ModuleStartAddress, uint64_t& ModuleEndAddress, uint64_t& ModuleSize)
+{
 	LPVOID moduleBase = nullptr;
 	SIZE_T moduleSize = 0;
 
 	// Get the handle to the executable module associated with the current process
 	HMODULE hModule = GetModuleHandle(NULL);
 
-	if (!hModule) {
+	if (!hModule)
+	{
 		std::cout << "Failed to get module handle." << std::endl;
 		return 0;
 	}
 
 	// Get information about the module
 	MODULEINFO modInfo;
-	if (!GetModuleInformation(hGameProcess, hModule, &modInfo, sizeof(modInfo))) {
+	if (!GetModuleInformation(hGameProcess, hModule, &modInfo, sizeof(modInfo)))
+	{
 		std::cout << "Failed to get module information." << std::endl;
 		return 0;
 	}
@@ -43,7 +46,8 @@ static uint64_t GetModuleMemoryRange(uint64_t& ModuleStartAddress, uint64_t& Mod
 	moduleBase = modInfo.lpBaseOfDll;
 	moduleSize = modInfo.SizeOfImage;
 
-	if (moduleBase != nullptr && ModuleStartAddress >= 0) {
+	if (moduleBase != nullptr && ModuleStartAddress >= 0)
+	{
 		ModuleStartAddress = (uint64_t)moduleBase;
 		ModuleEndAddress = ModuleStartAddress + static_cast<uint64_t>(moduleSize);
 		ModuleSize = static_cast<uint64_t>(moduleSize);
@@ -58,14 +62,16 @@ static uint64_t GetModuleMemoryRange(uint64_t& ModuleStartAddress, uint64_t& Mod
 }
 
 
-int static WINAPI Menu() {
+int static WINAPI Menu()
+{
 	AllocConsole();
 	freopen_s(&fp, "CONOUT$", "w", stdout);
 
 	//Get handle to the game, don't forget to close it.
 	hGameProcess = GetCurrentProcess();
 
-	if (!hGameProcess) {
+	if (!hGameProcess)
+	{
 		std::cout << "Failed to open process." << std::endl;
 		CreateThread(0, 0, EjectThread, 0, 0, 0);
 		return 1;
@@ -73,7 +79,8 @@ int static WINAPI Menu() {
 	if (!Verbose)
 		std::cout << "ProcessHandle: " << (uint64_t)hGameProcess << std::endl;
 
-	if (!GetModuleMemoryRange(GameStaticMemoryStartAddress, GameStaticMemoryEndAddress, GameStaticMemorySize)) {
+	if (!GetModuleMemoryRange(GameStaticMemoryStartAddress, GameStaticMemoryEndAddress, GameStaticMemorySize))
+	{
 		std::cout << "Error reading game' static memory boundaries, aborting!" << std::endl;
 		CreateThread(0, 0, EjectThread, 0, 0, 0);
 		return 0;
@@ -81,21 +88,31 @@ int static WINAPI Menu() {
 
 	DefineAllSignatureStructs();
 
-	std::cout << "Press 0 to Exit | Press 1 for Scanning" << std::endl;
-	while (1) {
+	std::cout << "Press 0 to Exit | Press 1 for action" << std::endl;
+	while (1)
+	{
 		Sleep(100);
 		if (GetAsyncKeyState(VK_NUMPAD0))
 			break;
-		if (GetAsyncKeyState(VK_NUMPAD1)) {
-
-			/* PoC 
-			* Spawn a basic form. 
+		if (GetAsyncKeyState(VK_NUMPAD1))
+		{
+			/* PoC
+			* Spawn a basic form with a child form inside.
 			*/
-			TGUIFormStructure* MyForm = createGUITemplate(TGUIForm, "My form!", 1, 0);
 
-			registerFormInternal((uint64_t*)MyForm, 1);
+			TGUIForm* ParentForm = TGUIForm::Create("Parent Form");
+			TGUIForm* ChildForm = TGUIForm::Create("Child Form", ParentForm);
 
-			std::cout << "Form address: " << std::hex << MyForm << std::endl;
+			ChildForm->Style = 0x10;	   // Set Border to Single line
+			ChildForm->FormStyle = 0x03;   // Enable Caption and CloseCross, disable Shadow
+			ChildForm->FormStyleEx = 0x80; // Set Caption type to single line
+			ChildForm->Width = ParentForm->Width / 2;
+			ChildForm->Height = ParentForm->Height / 2;
+
+			std::cout << "ParentForm address: " << std::hex << ParentForm << std::endl;
+			std::cout << "ChildForm address: " << std::hex << ChildForm << std::endl;
+
+			registerFormInternal(ParentForm, 1);
 		}
 	}
 
@@ -104,8 +121,8 @@ int static WINAPI Menu() {
 }
 
 
-BOOL APIENTRY DllMain(HMODULE hModule, int  ul_reason_for_call, LPVOID) {
-
+BOOL APIENTRY DllMain(HMODULE hModule, int  ul_reason_for_call, LPVOID)
+{
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH:
