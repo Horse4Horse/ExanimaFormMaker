@@ -1,5 +1,4 @@
-﻿// dllmain.cpp : Defines the entry point for the DLL application.
-
+﻿
 #include <dllmain.hpp>
 
 uint8_t Verbose = 1;
@@ -61,6 +60,21 @@ static uint64_t GetModuleMemoryRange(uint64_t& ModuleStartAddress, uint64_t& Mod
 	return 1;
 }
 
+/* TODO: For injecting a function inside a game
+DWORD GetFunctionSize(void* function)
+{
+	HMODULE hModule;
+	if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+		(LPCSTR)function, &hModule))
+	{
+		PIMAGE_DOS_HEADER pDosHeader = (PIMAGE_DOS_HEADER)hModule;
+		PIMAGE_NT_HEADERS pNtHeaders = (PIMAGE_NT_HEADERS)((BYTE*)hModule + pDosHeader->e_lfanew);
+
+		return pNtHeaders->OptionalHeader.SizeOfCode;
+	}
+	return 0;
+}
+*/
 
 int static WINAPI Menu()
 {
@@ -101,18 +115,69 @@ int static WINAPI Menu()
 			*/
 
 			TGUIForm* ParentForm = TGUIForm::Create("Parent Form");
+			ParentForm->Style |= 0x90;		// Set Border to Double line
+			ParentForm->FVisible = false;  
+			ParentForm->Width = 400;
+			ParentForm->Height = 500;
+
 			TGUIForm* ChildForm = TGUIForm::Create("Child Form", ParentForm);
+			ChildForm->Style |= 0x3010;	
+			ChildForm->FormStyle = 0x03;			// Enable Caption and CloseCross, disable Shadow
+			ChildForm->FormStyleEx &= 0xFFFFFF7F;   // Enable child's upper border caption support
+			ChildForm->PosX = 7;
+			ChildForm->PosY = 5;
+			ChildForm->Width = 300;
+			ChildForm->Height = 400;
+			ChildForm->Border = 4;
 
-			ChildForm->Style = 0x10;	   // Set Border to Single line
-			ChildForm->FormStyle = 0x03;   // Enable Caption and CloseCross, disable Shadow
-			ChildForm->FormStyleEx = 0x80; // Set Caption type to single line
-			ChildForm->Width = ParentForm->Width / 2;
-			ChildForm->Height = ParentForm->Height / 2;
 
-			std::cout << "ParentForm address: " << std::hex << ParentForm << std::endl;
-			std::cout << "ChildForm address: " << std::hex << ChildForm << std::endl;
+			TGUITableView* TableView = TGUITableView::Create("Table View", ChildForm);
+			TableView->PosX = 0;
+			TableView->PosY = 0;
+			TableView->Width = TableView->Parent->Width - (2 * TableView->Parent->Border);
+			TableView->Height = TableView->Parent->Height - 100;
+			TableView->Border = 2;
+			TableView->Style |= 0x80; //Single outline for internal subforms.
+			*(uint32_t*)&TableView->FormStyle = *(uint32_t*)&TableView->FormStyle & 0xFFFF3F6F | 0x90;
+			TableView->Columns = 3;
+			fSystem__DynArraySetLength_Internal(&TableView->Column, pTGUITableColumn_DynArray, 1, &TableView->Columns); //since we don't use second dimension - provide just a pointer to the columns
+			int colWidth = ((TableView->Width / TableView->Columns) - (TableView->Border * 2)) ;
+			(void*)TGUITableColumn::Create(&TableView->Column[0], "Column 1", colWidth); //Cast return to void since we will not set additional data to clumns
+			(void*)TGUITableColumn::Create(&TableView->Column[1], "Column 2", colWidth);
+			(void*)TGUITableColumn::Create(&TableView->Column[2], "Column 3", colWidth);
 
-			registerFormInternal(ParentForm, 1);
+
+
+			TGUIControl buttonArray[2]; //create an array on the stack
+
+			TGUIControl* buttonAdd = &buttonArray[0];
+			buttonAdd->CntrlClass = 0x0001;
+			buttonAdd->wdt = 110;
+			buttonAdd->hgt = 30;
+			buttonAdd->px = TableView->Border + 3;
+			buttonAdd->py = (TableView->Height + 10) / 4;
+			MakeCPString(&buttonAdd->FCaption, "Add item");
+			buttonAdd->MsgProc = TGUIControl_MsgProc_Button_Internal;
+			buttonAdd->ControlID = 1;
+			buttonAdd->OnChange = ButtonCallback;
+
+			TGUIControl* buttonRemove = &buttonArray[1];
+			buttonRemove->CntrlClass = 0x0001;
+			buttonRemove->wdt = 110;
+			buttonRemove->hgt = 30;
+			buttonRemove->px = TableView->Width - (TableView->Border * 2) - buttonRemove->wdt;
+			buttonRemove->py = (TableView->Height + 10) / 4;
+			MakeCPString(&buttonRemove->FCaption, "Remove item");
+			buttonRemove->MsgProc = TGUIControl_MsgProc_Button_Internal;
+			buttonRemove->ControlID = 2;
+			buttonRemove->State |= 0x10; //Disable button by default
+			buttonRemove->OnChange = ButtonCallback;
+
+			ChildForm->AssignControls(buttonArray,1); //AssignControls with "staticControls = false" will alloc mem on the heap and transfer everthing there. Else it won't try to dealloc controls(Like from RO mem) by setting form->OwnsControls=false
+
+
+			fRegisterForm_Internal(ParentForm, 1);
+			ParentForm->FVisible = true;
 		}
 	}
 

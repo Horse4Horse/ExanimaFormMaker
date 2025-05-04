@@ -1,28 +1,38 @@
 #include <dllmain.hpp>
 
+
+
 TGUIForm* TGUIForm::Create(const char* Caption, TGUIForm* ParentForm)
 {
-	if (TGUIForm_vmt)
+	if (pTGUIForm_vmt)
 	{
-		TGUIForm* NewForm = (TGUIForm*)createGUITemplateInternal(TGUIForm_vmt, 1, (uint64_t*)ParentForm);
+		TGUIForm* NewForm = (TGUIForm*)fTGUIForm__Create_Internal(pTGUIForm_vmt, 1, (uint64_t*)ParentForm);
 		if (!NewForm) {
 			std::cout << "Can't create TGUIForm! Caption: " << Caption << std::endl;
 			return nullptr;
 		}
 
-		MakeCPString((uint64_t*)&NewForm->pCaption, Caption, strlen(Caption) - 1, FALSE, TRUE); // You need to pass an address of a pCaption pointer of the form
+		MakeCPString((uint64_t*)&NewForm->Caption, Caption); // You need to pass an address of a Caption of the form
 
-		NewForm->pTask = getTGSLinesInternal();
-		NewForm->Style |= 0xB800;
-		NewForm->FormStyle = 0x22;
-		NewForm->FormStyleEx = 0x03;
-		NewForm->SpcType = 0x90;
+		NewForm->FGUISkin		= fGetTGSLines_Internal();
+		NewForm->Style			|= 0xB800;
+		NewForm->FormStyle		= 0x22;
+		NewForm->FormStyleEx	= 0x03;
+		NewForm->SpcType		= 0x90;
 
 		std::cout << "Form created: " << Caption << " " << std::hex << NewForm << std::endl;
 
 		return NewForm; // Game will handle dealloc by Newform->FreeOnClose.
 	};
 	return nullptr;
+}
+
+void TGUIForm::AssignControls(void* ControlArray, int32_t size, bool staticControls)
+{
+	if (ControlArray)
+	{
+		this->pClassPointer->AssignControls(this, ControlArray, size, staticControls);
+	}
 }
 
 /** TODO: Define all basic TGUIForm functions and wrap them.
@@ -33,42 +43,84 @@ void TGUIForm::Destroy(TGUIForm* Form)
 */
 
 
-/* TODO */
-TTextForm* TTextForm::Create(const char* Caption, TGUIForm* ParentForm)
+
+TTextBox* TTextBox::Create(const char* Caption, TTextBox* ParentForm)
 {
-	if (TGUIForm_vmt)
+	if (pTTextBox_vmt)
 	{
-		TTextForm* NewForm = (TTextForm*)createGUITemplateInternal(TGUIForm_vmt, 1, (uint64_t*)ParentForm);
-		if (!NewForm)
-		{
-			std::cout << "Can't create TGUIForm! Caption: " << Caption << std::endl;
+		TTextBox* NewForm = (TTextBox*)fTTextBox__Create_Internal(pTTextBox_vmt, 1, (uint64_t*)ParentForm);
+		if (!NewForm) {
+			std::cout << "Can't create TTextBox! Caption: " << Caption << std::endl;
 			return nullptr;
 		}
 
-		// Old style, was offloaded to specialized game function. 
-		size_t CaptionLength = strlen(Caption) + 1;
-		uint64_t StringHeader[3] = { 0x0000000000010000 , 0xFFFFFFFFFFFFFFFF, CaptionLength };			// Make an array of header + length of a caption
-		size_t StringHeaderSize = sizeof(StringHeader);
+		if (Caption)
+			MakeCPString((uint64_t*)&NewForm->Caption, Caption);
 
-		uint64_t addr = 0;
-		NewForm->pCaption = reallocInternal(&addr, CaptionLength + StringHeaderSize);					 // Set pointer to allocated memory to a pCaption
-		if (!NewForm->pCaption)
-		{
-			std::cout << "Can't alloc memory for the form's Caption! Caption string: " << Caption << std::endl;
-			/**TODO:
-			* dealloc form memory through a game function.
-			*/
-			return nullptr;
-		}
-		memcpy_s(NewForm->pCaption, CaptionLength + StringHeaderSize, StringHeader, StringHeaderSize);	 // Copy caption header to a memory
-		memcpy_s((uint8_t*)NewForm->pCaption + StringHeaderSize, CaptionLength, Caption, CaptionLength); // Copy Caption after a header
-		NewForm->pCaption = (uint64_t*)((uint8_t*)NewForm->pCaption + StringHeaderSize);				 // Change pointer so it will point to the actual string and not the header.
+		NewForm->FGUISkin		= fGetTGSLines_Internal();
+		NewForm->Style			|= 0xB800;
+		NewForm->FormStyle		= 0x22;
+		NewForm->FormStyleEx	= 0x03;
+		NewForm->SpcType		= 0x90;
 
-		NewForm->pTask = getTGSLinesInternal();
-		NewForm->Style |= 0x0000B800;
-		NewForm->SpcType |= 0x10;
+		std::cout << "Form created: " << Caption << " " << std::hex << NewForm << std::endl;
 
-		return NewForm; // Game will handle dealloc by Newform->FreeOnClose.
+		return NewForm;
 	};
 	return nullptr;
+}
+
+
+TGUITableView* TGUITableView::Create(const char* Caption, TGUIForm* ParentForm)
+{
+	if (pTGUITableView_vmt)
+	{
+		TGUITableView* NewForm = (TGUITableView*)fTGUITableView__Create_Internal(pTGUITableView_vmt, 1, (uint64_t*)ParentForm);
+		if (!NewForm) {
+			std::cout << "Can't create TTextBox! Caption: " << Caption << std::endl;
+			return nullptr;
+		}
+
+		if (Caption)
+			MakeCPString((uint64_t*)&NewForm->Caption, Caption);
+
+		NewForm->FGUISkin = fGetTGSLines_Internal();
+
+		std::cout << "Form created: " << Caption << " " << std::hex << NewForm << std::endl;
+
+		return NewForm;
+	};
+	return nullptr;
+}
+
+void TGUITableView::CopyColumnData(TGUITableColumn* InputData) const
+{
+	memcpy_s(Column, sizeof(TGUITableColumn) * Columns, InputData, sizeof(TGUITableColumn) * Columns);
+}
+
+void TGUITableView::CopyItemData(TGUITableItem* InputData)
+{
+	for (size_t i = 0; i < Items; ++i) {
+		
+		Item[i].Flags = InputData[i].Flags;
+
+		if (!realloc(&Item[i].ItemField, sizeof(TGUITableItemField) * Columns))
+			std::cout << "CopyFieldData error: Can't allocate mem for item fields! Caption:  " << Caption << " Address: " << std::hex << this << std::endl;
+
+		for (size_t c = 0; c < Columns; ++c) {
+			Item[i].ItemField[c] = InputData[i].ItemField[c];
+		}
+	}
+}
+
+// Get rid of warnings
+
+TGUITableColumn* TGUITableColumn::Create(TGUITableColumn* Dst, const char* TitleStrig, int ColumnWidth)
+{
+	TGUITableColumn* column = Dst;
+	MakeCPString(&column->Title, TitleStrig);
+	column->Width = ColumnWidth;
+	column->Draw = 0;
+	column->GetString = 0;
+	return column;
 }
