@@ -11,7 +11,7 @@ Project is configured for **v143** toolset with Windows SDK library **v10.0**, i
 Just compile in **Debug x64** mode and inject the target dll into the game. I'm using [Xenos](https://github.com/DarthTon/Xenos) and [Cheat Engine](https://github.com/cheat-engine/cheat-engine)
 
 # Screenshots
-![Execution](https://i.ibb.co/8nY6hnB5/Exanima-25-05-04-18-13-20.png)
+![Execution](https://i.ibb.co/ycS9cJmr/Exanima-25-05-04-18-13-20.png)
 
 # Disclaimer
 As a very inexperienced windows api dev, I will make a bunch of errors, typos, commits and changes.
