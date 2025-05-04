@@ -165,6 +165,7 @@
     <ClCompile Include="Forms.cpp" />
     <ClCompile Include="Src\dllmain.cpp" />
     <ClCompile Include="Src\GUIFuncWrapper.cpp" />
+    <ClCompile Include="Src\MyFunctions.cpp" />
     <ClCompile Include="Src\Sig.cpp" />
     <ClCompile Include="Src\Signatures.cpp" />
   </ItemGroup>
@@ -172,6 +173,7 @@
     <ClInclude Include="Inc\dllmain.hpp" />
     <ClInclude Include="Inc\Forms.hpp" />
     <ClInclude Include="Inc\GUIFuncWrapper.hpp" />
+    <ClInclude Include="Inc\MyFunctions.hpp" />
     <ClInclude Include="Inc\Signatures.hpp" />
     <ClInclude Include="Inc\Sig\Sig.hpp" />
   </ItemGroup>

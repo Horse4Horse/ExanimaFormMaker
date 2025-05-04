@@ -10,6 +10,8 @@
 #include <Signatures.hpp>
 #include <GUIFuncWrapper.hpp>
 #include <Forms.hpp>
+#include <MyFunctions.hpp>
+#pragma pack(1)
 
 extern uint8_t Verbose;
 // Handle to a module gained at injection phase, needed for ejeting
@@ -23,5 +25,7 @@ extern uint64_t GameStaticMemorySize;
 static FILE* fp; // for console's cout
 
 static uint64_t GetModuleMemoryRange(uint64_t& ModuleStartAddress, uint64_t& ModuleEndAddress, uint64_t& ModuleSize);
+
+//DWORD GetFunctionSize(void* function);
 
 extern void DefineAllSignatureStructs();
